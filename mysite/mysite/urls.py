@@ -19,6 +19,6 @@ from vuejsform.router import router
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('vuejsform.urls')),
+    path('', include('reactjsform.urls')),
     path('api/', include(router.urls)),
 ]

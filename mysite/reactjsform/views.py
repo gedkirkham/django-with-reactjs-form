@@ -1,4 +1,4 @@
 from django.shortcuts import render
 
 def index(request):
-    return render(request, 'vuejsform/form.html')
+    return render(request, 'reactjsform/form.html')
