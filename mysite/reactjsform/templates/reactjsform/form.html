@@ -5,57 +5,25 @@
         <h1>[[ title ]]</h1>
     </header>
 
-    <section>
-        <header>
-            <h2>Products</h2>
-        </header>
-        <table>
-            <tr>
-                <th v-for="(header, index) in headers" :key="index">[[ header ]]</th>
-            </tr>
-            <tr v-for="(product, index1) in products" :key="index1">
-                <td v-for="(item, index2) in products[index1]" :key="index2">[[ item ]]</td>
-            </tr>
-        </table>
-    </section>
+<!--    <section>-->
+<!--        <header>-->
+<!--            <h2>Products</h2>-->
+<!--        </header>-->
+<!--        <table>-->
+<!--            <tr>-->
+<!--                <th v-for="(header, index) in headers" :key="index">[[ header ]]</th>-->
+<!--            </tr>-->
+<!--            <tr v-for="(product, index1) in products" :key="index1">-->
+<!--                <td v-for="(item, index2) in products[index1]" :key="index2">[[ item ]]</td>-->
+<!--            </tr>-->
+<!--        </table>-->
+<!--    </section>-->
 
     <section>
         <header>
             <h2>Form</h2>
         </header>
-        <form method="post" @submit.prevent="addProduct()">
-            <b-field label="Product name" type="is-info">
-                <b-input v-model="form.name" type="text" required></b-input>
-            </b-field>
-
-            <b-field label="Code" type="is-info">
-                <b-input v-model="form.code" type="text" validation-message="Minimum of 10 characters" minlength="10" maxlength="10" required></b-input>
-            </b-field>
-
-            <b-field label="Factory" type="is-info">
-                <b-select v-model="form.factory" placeholder="Select a factory" required>
-                    <option
-                        v-for="(factory, index) in factories"
-                        :value="factory"
-                        :key="index">
-                        [[ factory ]]
-                    </option>
-                </b-select>
-            </b-field>
-
-            <b-field label="Origin" type="is-info">
-                <b-select v-model="form.origin" placeholder="Select an origin" required>
-                    <option
-                        v-for="(country, index) in countries"
-                        :value="country"
-                        :key="index">
-                        [[ country ]]
-                    </option>
-                </b-select>
-            </b-field>
-
-            <button class="button is-medium is-info" type="submit">Add</button>
-        </form>
+        <div id="form_container"></div>
     </section>
 </div>
 
@@ -70,50 +38,124 @@ th, td {
 }
 </style>
 
-<script>
-new Vue({
-  delimiters: ['[[', ']]'],
-  el: '#form',
-  data: {
-    countries: ['United Kingdom', 'United States', 'China'],
-    form: {
-        name: '',
-        code: '',
-        factory: '',
-        origin: ''
-    },
-    factories: ['Big factory', 'Small factory', 'MASSIVE factory'],
-    headers: [],
-    products: {},
-    title: 'Welcome to our VueJS form'
-  },
-  created () {
-    this.getProducts()
-  },
-  methods: {
-    getProducts () {
-        this.$http
-            .get('/api/products/')
-            .then(_resp => {
-                this.products = _resp.body
-                this.headers = Object.keys(this.products[0])
-             })
-            .catch(_error => { console.error(_error) })
-    },
-    addProduct () {
-        this.$http
-            .post('/api/product/', this.form)
-            .then(_resp => { this.getProducts() })
-            .catch(_error => { console.error(_error) })
-    }
-  }
-})
+<script type="text/babel">
+'use strict';
 
-Vue.http.interceptors.push(function (_request) {
-    if(_request.method === 'POST' || _request.method === 'PUT') {
-        const TOKEN = Cookies.get('csrftoken')
-        _request.headers.set('X-CSRFToken', TOKEN)
+const e = React.createElement;
+
+class Form extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            countries: ['United Kingdom', 'United States', 'China'],
+            form: {
+                code: '',
+                factory: '',
+                name: '',
+                origin: ''
+            },
+            factories: ['Big factory', 'Small factory', 'MASSIVE factory']
+        }
+
+        this.handleChange = this.handleChange.bind(this)
+        this.handleSubmit = this.handleSubmit.bind(this)
     }
-})
+
+    handleChange(event) {
+        let state = this.state
+        const PROPERTY = event.target.name
+        const VALUE = event.target.value
+        state.form[PROPERTY] = VALUE
+        this.setState({ state })
+    }
+
+    handleSubmit(event) {
+        alert('Submitted', this.state.value)
+        event.preventDefault()
+    }
+
+    render() {
+        return (
+            <form onSubmit={this.handleSubmit}>
+                <label>
+                    Name:
+                    <input name="name" type="text" value={this.state.form.name} onChange={this.handleChange} required />
+                </label>
+
+                <label>
+                    Code:
+                    <input name="code" type="text" value={this.state.form.code} onChange={this.handleChange} validation-message="Minimum of 10 characters" minLength="10" maxLength="10" required />
+                </label>
+
+                <label>
+                    Factory:
+                    <select name="factory" value={this.state.form.factory} onChange={this.handleChange} required>
+                        {this.state.factories.map(factory => <option key={factory.toString()}>{factory}</option>)}
+                    </select>
+                </label>
+
+                <label>
+                    Origin:
+                    <select name="origin" value={this.state.form.origin} onChange={this.handleChange} required>
+                        {this.state.countries.map(origin => <option key={origin.toString()}>{origin}</option>)}
+                    </select>
+                </label>
+
+                <button type="submit">Add</button>
+            </form>
+        );
+    }
+}
+
+const domContainer = document.querySelector('#form_container');
+ReactDOM.render(e(Form), domContainer);
 </script>
+
+<!--<script>-->
+<!--new Vue({-->
+<!--  delimiters: ['[[', ']]'],-->
+<!--  el: '#form',-->
+<!--  data: {-->
+<!--    countries: ['United Kingdom', 'United States', 'China'],-->
+<!--    form: {-->
+<!--        name: '',-->
+<!--        code: '',-->
+<!--        factory: '',-->
+<!--        origin: ''-->
+<!--    },-->
+<!--    factories: ['Big factory', 'Small factory', 'MASSIVE factory'],-->
+<!--    headers: [],-->
+<!--    products: {},-->
+<!--    title: 'Welcome to our VueJS form'-->
+<!--  },-->
+<!--  created () {-->
+<!--    this.getProducts()-->
+<!--  },-->
+<!--  methods: {-->
+<!--    getProducts () {-->
+<!--        this.$http-->
+<!--            .get('/api/products/')-->
+<!--            .then(_resp => {-->
+<!--                this.products = _resp.body-->
+<!--                this.headers = Object.keys(this.products[0])-->
+<!--             })-->
+<!--            .catch(_error => { console.error(_error) })-->
+<!--    },-->
+<!--    addProduct () {-->
+<!--        this.$http-->
+<!--            .post('/api/product/', this.form)-->
+<!--            .then(_resp => { this.getProducts() })-->
+<!--            .catch(_error => { console.error(_error) })-->
+<!--    }-->
+<!--  }-->
+<!--})-->
+
+<!--Vue.http.interceptors.push(function (_request) {-->
+<!--    if(_request.method === 'POST' || _request.method === 'PUT') {-->
+<!--        const TOKEN = Cookies.get('csrftoken')-->
+<!--        _request.headers.set('X-CSRFToken', TOKEN)-->
+<!--    }-->
+<!--})-->
+<!--</script>-->
 {% endblock %}
+</script>
