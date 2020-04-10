@@ -41,19 +41,42 @@ class ProductTable extends React.Component {
         super(props);
         this.state = {
             headers: [],
-            products: [{}]
+            products: []
         }
     }
 
+    componentDidMount () {
+        this.getProducts()
+    }
+
+    getProducts () {
+        fetch('http://127.0.0.1:8000/api/products/')
+            .then(_resp => _resp.json())
+            .then(_data => {
+                const HEADERS = Object.keys(_data[0])
+                this.setState({ headers: HEADERS })
+                this.setState({ products: _data })
+            })
+            .catch(_error => { console.error(_error) })
+    }
+
     render() {
+            const ITEMS = this.state.products.map((product, index) => {
+                    const PRODUCT = this.state.products[index]
+                    let tdItems = Object.keys(PRODUCT).map(key => <td key={PRODUCT[key]}>{PRODUCT[key]}</td> )
+                    return <tr key={index}>{tdItems}</tr>
+                })
         return (
             <table>
-                <tr>
-                    <th v-for="(header, index) in headers" :key="index">[[ header ]]</th>
-                </tr>
-                <tr v-for="(product, index1) in products" :key="index1">
-                    <td v-for="(item, index2) in products[index1]" :key="index2">[[ item ]]</td>
-                </tr>
+                <thead>
+                    <tr>
+                        {this.state.headers.map(header => <th key={header.toString()}>{header}</th>)}
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {ITEMS}
+                </tbody>
             </table>
         );
     }
