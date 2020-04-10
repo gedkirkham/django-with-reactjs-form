@@ -2,20 +2,10 @@
 {% block content %}
 <div id="form">
     <header>
-        <h1>[[ title ]]</h1>
+        <h1>Django Product form page</h1>
     </header>
 
     <section>
-        <header>
-            <h2>Products</h2>
-        </header>
-        <div id="product_table_container"></div>
-    </section>
-
-    <section>
-        <header>
-            <h2>Form</h2>
-        </header>
         <div id="form_container"></div>
     </section>
 </div>
@@ -32,56 +22,6 @@ th, td {
 </style>
 
 <script type="text/babel">
-'use strict';
-
-const productTableContainer = React.createElement
-
-class ProductTable extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            headers: [],
-            products: []
-        }
-    }
-
-    componentDidMount () {
-        this.getProducts()
-    }
-
-    getProducts () {
-        fetch('http://127.0.0.1:8000/api/products/')
-            .then(_resp => _resp.json())
-            .then(_data => {
-                const HEADERS = Object.keys(_data[0])
-                this.setState({ headers: HEADERS })
-                this.setState({ products: _data })
-            })
-            .catch(_error => { console.error(_error) })
-    }
-
-    render() {
-            const ITEMS = this.state.products.map((product, index) => {
-                    const PRODUCT = this.state.products[index]
-                    let tdItems = Object.keys(PRODUCT).map(key => <td key={PRODUCT[key]}>{PRODUCT[key]}</td> )
-                    return <tr key={index}>{tdItems}</tr>
-                })
-        return (
-            <table>
-                <thead>
-                    <tr>
-                        {this.state.headers.map(header => <th key={header.toString()}>{header}</th>)}
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {ITEMS}
-                </tbody>
-            </table>
-        );
-    }
-}
-
 const formContainer = React.createElement;
 
 class Form extends React.Component {
@@ -95,11 +35,28 @@ class Form extends React.Component {
                 name: '',
                 origin: ''
             },
-            factories: ['Big factory', 'Small factory', 'MASSIVE factory']
+            factories: ['Big factory', 'Small factory', 'MASSIVE factory'],
+            headers: [],
+            products: []
         }
 
         this.handleChange = this.handleChange.bind(this)
         this.handleSubmit = this.handleSubmit.bind(this)
+    }
+
+    componentDidMount () {
+        this.getProducts()
+    }
+
+    getProducts () {
+        fetch('/api/products/')
+            .then(_resp => _resp.json())
+            .then(_data => {
+                const HEADERS = Object.keys(_data[0])
+                this.setState({ headers: HEADERS })
+                this.setState({ products: _data })
+            })
+            .catch(_error => { console.error(_error) })
     }
 
     handleChange(event) {
@@ -110,86 +67,87 @@ class Form extends React.Component {
         this.setState({ state })
     }
 
-    handleSubmit(event) {
-        alert('Submitted', this.state.value)
+    async handleSubmit(event) {
         event.preventDefault()
+        const TOKEN = Cookies.get('csrftoken')
+        await fetch('/api/products/', {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': TOKEN
+                },
+                body: JSON.stringify(this.state.form)
+            })
+            .then(_resp => this.getProducts())
+            .catch(_error => console.error(_error))
     }
 
     render() {
+        const ITEMS = this.state.products.map((product, index) => {
+            const PRODUCT = this.state.products[index]
+            let tdItems = Object.keys(PRODUCT).map(key => <td key={PRODUCT[key]}>{PRODUCT[key]}</td> )
+            return <tr key={index}>{tdItems}</tr>
+        })
+
         return (
-            <form onSubmit={this.handleSubmit}>
-                <label>
-                    Name:
-                    <input name="name" type="text" value={this.state.form.name} onChange={this.handleChange} required />
-                </label>
+            <div>
+                <header>
+                    <h2>Products</h2>
+                </header>
 
-                <label>
-                    Code:
-                    <input name="code" type="text" value={this.state.form.code} onChange={this.handleChange} validation-message="Minimum of 10 characters" minLength="10" maxLength="10" required />
-                </label>
+                <table>
+                    <thead>
+                        <tr>
+                            {this.state.headers.map(header => <th key={header.toString()}>{header}</th>)}
+                        </tr>
+                    </thead>
 
-                <label>
-                    Factory:
-                    <select name="factory" value={this.state.form.factory} onChange={this.handleChange} required>
-                        {this.state.factories.map(factory => <option key={factory.toString()}>{factory}</option>)}
-                    </select>
-                </label>
+                    <tbody>
+                        {ITEMS}
+                    </tbody>
+                </table>
 
-                <label>
-                    Origin:
-                    <select name="origin" value={this.state.form.origin} onChange={this.handleChange} required>
-                        {this.state.countries.map(origin => <option key={origin.toString()}>{origin}</option>)}
-                    </select>
-                </label>
 
-                <button type="submit">Add</button>
-            </form>
-        );
+                <header>
+                    <h2>Form</h2>
+                </header>
+
+                <form onSubmit={this.handleSubmit}>
+                    <label>
+                        Name:
+                        <input name="name" type="text" value={this.state.form.name} onChange={this.handleChange} required />
+                    </label>
+
+                    <label>
+                        Code:
+                        <input name="code" type="text" value={this.state.form.code} onChange={this.handleChange} validation-message="Minimum of 10 characters" minLength="10" maxLength="10" required />
+                    </label>
+
+                    <label>
+                        Factory:
+                        <select name="factory" value={this.state.form.factory} onChange={this.handleChange} required>
+                            <option value="none" />
+                            {this.state.factories.map(factory => <option key={factory.toString()}>{factory}</option>)}
+                        </select>
+                    </label>
+
+                    <label>
+                        Origin:
+                        <select name="origin" value={this.state.form.origin} onChange={this.handleChange} required>
+                            <option value="none" />
+                            {this.state.countries.map(origin => <option value={origin.toString()} key={origin.toString()}>{origin}</option>)}
+                        </select>
+                    </label>
+
+                    <button type="submit">Add</button>
+                </form>
+            </div>
+        )
     }
 }
 
 const domContainer = document.querySelector('#form_container');
 ReactDOM.render(formContainer(Form), domContainer);
-
-const domContainer2 = document.querySelector('#product_table_container')
-ReactDOM.render(productTableContainer(ProductTable), domContainer2)
 </script>
-
-<!--<script>-->
-<!--new Vue({-->
-<!--  data: {-->
-<!--    headers: [],-->
-<!--    products: {},-->
-<!--    title: 'Welcome to our VueJS form'-->
-<!--  },-->
-<!--  created () {-->
-<!--    this.getProducts()-->
-<!--  },-->
-<!--  methods: {-->
-<!--    getProducts () {-->
-<!--        this.$http-->
-<!--            .get('/api/products/')-->
-<!--            .then(_resp => {-->
-<!--                this.products = _resp.body-->
-<!--                this.headers = Object.keys(this.products[0])-->
-<!--             })-->
-<!--            .catch(_error => { console.error(_error) })-->
-<!--    },-->
-<!--    addProduct () {-->
-<!--        this.$http-->
-<!--            .post('/api/product/', this.form)-->
-<!--            .then(_resp => { this.getProducts() })-->
-<!--            .catch(_error => { console.error(_error) })-->
-<!--    }-->
-<!--  }-->
-<!--})-->
-
-<!--Vue.http.interceptors.push(function (_request) {-->
-<!--    if(_request.method === 'POST' || _request.method === 'PUT') {-->
-<!--        const TOKEN = Cookies.get('csrftoken')-->
-<!--        _request.headers.set('X-CSRFToken', TOKEN)-->
-<!--    }-->
-<!--})-->
-<!--</script>-->
 {% endblock %}
-</script>
