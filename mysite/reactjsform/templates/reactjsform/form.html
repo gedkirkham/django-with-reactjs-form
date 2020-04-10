@@ -46,6 +46,12 @@ class Form extends React.Component {
 
     componentDidMount () {
         this.getProducts()
+        this.setState({
+            form: {
+                factory: this.state.countries[0],
+                origin: this.state.factories[0]
+            }
+        })
     }
 
     getProducts () {
@@ -67,10 +73,10 @@ class Form extends React.Component {
         this.setState({ state })
     }
 
-    async handleSubmit(event) {
+    handleSubmit(event) {
         event.preventDefault()
         const TOKEN = Cookies.get('csrftoken')
-        await fetch('/api/products/', {
+        fetch('/api/products/', {
                 method: 'post',
                 headers: {
                     'Accept': 'application/json',
@@ -127,7 +133,6 @@ class Form extends React.Component {
                     <label>
                         Factory:
                         <select name="factory" value={this.state.form.factory} onChange={this.handleChange} required>
-                            <option value="none" />
                             {this.state.factories.map(factory => <option key={factory.toString()}>{factory}</option>)}
                         </select>
                     </label>
@@ -135,7 +140,6 @@ class Form extends React.Component {
                     <label>
                         Origin:
                         <select name="origin" value={this.state.form.origin} onChange={this.handleChange} required>
-                            <option value="none" />
                             {this.state.countries.map(origin => <option value={origin.toString()} key={origin.toString()}>{origin}</option>)}
                         </select>
                     </label>
